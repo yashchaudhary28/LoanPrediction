@@ -1,0 +1,50 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jun  8 20:13:22 2020
+
+@author: yash
+"""
+#To improve our accuracy we will try to use validation methods.
+#Here first we will use stratified k fold validation method.
+
+from sklearn.model_selection import StratifiedKFold
+from sklearn import metrics
+#now lets make stratified model with 10 folds
+
+i=1
+kf = StratifiedKFold(n_splits = 5, random_state=1, shuffle=True)
+for train_index, test_index in kf.split(X,y):
+    print('\n{} of kfold {}'.format(i, kf.n_splits))
+    xtr, xvl = X.loc[train_index], X.loc[test_index]
+    ytr, yvl = y.loc[train_index], y.loc[test_index]
+    model_1 = LogisticRegression(random_state = 1)
+    model_1.fit(xtr, ytr)
+    pred_test_1 = model_1.predict(xvl)
+    score = accuracy_score(yvl, pred_test_1)
+    print('accuracy_score',score)
+    i+=1
+pred_test = model_1.predict(test)
+pred = model_1.predict_proba(xvl)[:,1]
+
+#Plot an AUC curve
+fpr, tpr, _ = metrics.roc_curve(yvl, pred) 
+auc = metrics.roc_auc_score(yvl, pred)
+plt.figure(figsize=(12,8))
+plt.plot(fpr, tpr, label = "validation, auc = "+str(auc))
+plt.xlabel('false positive rate')
+plt.ylabel('True positive rate')
+plt.legend(loc=4)
+plt.show()
+
+#submit the file for validation.
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_original['Loan_ID']
+
+submission['Loan_Status'].replace(0, 'N', inplace = True)
+submission['Loan_Status'].replace(1, 'Y', inplace = True)
+
+pd.DataFrame(submission, columns = ['Loan_ID', 'Loan_Status']).to_csv('LogisticVal_n=05.csv')
+
+
+
+         

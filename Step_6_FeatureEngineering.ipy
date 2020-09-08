@@ -1,0 +1,55 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun  9 17:44:19 2020
+
+@author: yashc
+"""
+### FEATURE ENGINEERING
+#Based on domain knowledge we will now come up with new features that might affect target variable.
+
+#Total Income --> combined income of applicant and coapplicant.
+train['Total_Income'] = train['ApplicantIncome'] + train['CoapplicantIncome']
+test['Total_Income'] = test['ApplicantIncome'] + test['CoapplicantIncome']
+
+sns.distplot(train['Total_Income'])
+train['Total_Income_log'] = np.log(train['Total_Income'])
+sns.distplot(train['Total_Income_log'])
+test['Total_Income_log'] = np.log(test['Total_Income'])
+#after doing log transformation we see that the distribution is much more normal than before.
+
+#Dependents --> combine 1,2,3 dependents into 1 group
+train['Dependents'].replace('1', '1+', inplace = True)
+train['Dependents'].replace('2', '1+', inplace = True)
+train['Dependents'].replace('3', '1+', inplace = True)
+train['Dependents'].replace( 3 , '1+', inplace = True)
+
+plt.figure(1)
+plt.subplot(131)
+train['Dependents'].value_counts(normalize = True).plot.bar(figsize = (10,10),title = 'Dependents')
+
+test['Dependents'].replace('1', '1+', inplace = True)
+test['Dependents'].replace('2', '1+', inplace = True)
+test['Dependents'].replace('3', '1+', inplace = True)
+test['Dependents'].replace( 3 , '1+', inplace = True)
+
+
+#EMI --> The monthly maount paid by the applicant to repay the loan.
+train['EMI'] = train['LoanAmount'] / train['Loan_Amount_Term']
+test['EMI'] = test['LoanAmount'] / test['Loan_Amount_Term']
+
+sns.distplot(train['EMI'])
+
+train['EMI_log'] = np.log(train['EMI'])
+sns.distplot(train['EMI_log'])
+#after doing log transformation we see that it is a normal distribution.
+
+#Balance Income --> income left after paying emi per month
+
+train['Balance_Income'] = train['Total_Income'] - (train['EMI']*1000)
+test['Balance_Income'] = test['Total_Income'] - (train['EMI']*1000)
+#we multiply by 1000 to balance out both sides.
+sns.distplot(train['Balance_Income'])
+
+#remove the old variables from which new ones are made to avoid high corelation between them.
+train = train.drop(['ApplicantIncome', 'CoapplicantIncome', 'Total_Income', 'LoanAmount', 'Loan_Amount_Term', 'EMI_log'], axis = 1)
+test = test.drop(['ApplicantIncome', 'CoapplicantIncome','Total_Income', 'LoanAmount', 'Loan_Amount_Term'], axis = 1)

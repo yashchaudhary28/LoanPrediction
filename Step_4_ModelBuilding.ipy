@@ -1,0 +1,54 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jun  6 23:33:40 2020
+
+@author: yashc
+"""
+
+#First we will ready our dataset and drop unnessary columns from train and test data.
+
+train = train.drop('Loan_ID', axis = 1)
+test = test.drop('Loan_ID', axis = 1)
+
+#SKlearn requires the target variable in seperate dataset.
+#So we drop target variable from our train dataset and save it in another dataset.
+
+X = train.drop('Loan_Status', axis = 1)
+y = train.Loan_Status
+
+#we will create dummy variables for categorical variables.
+
+X = pd.get_dummies(X)
+train = pd.get_dummies(train)
+test = pd.get_dummies(test)
+
+#Import train test split from sklearn library and split the datasets.
+from sklearn.model_selection import train_test_split
+
+X_train, X_cv, y_train, y_cv = train_test_split(X, y, test_size = 0.3)
+
+#Import logistic regeression, accuracy_score from sklearn library.
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+model = LogisticRegression(multi_class = 'ovr', n_jobs = 1, random_state = 1, solver = 'liblinear')
+model.fit(X_train, y_train)
+
+pred_cv = model.predict(X_cv)
+
+accuracy_score(y_cv, pred_cv)
+
+#we will submit our predictions in the asked format.
+submission=pd.read_csv("sample_submission_49d68Cx.csv")
+#We only need the Loan_ID and the corresponding Loan_Status for the final submission. we will fill these columns with the Loan_ID of test dataset and the predictions that we made, i.e., pred_test respectively.
+
+submission['Loan_Status']=pred_test 
+submission['Loan_ID']=test_original['Loan_ID']
+#Remember we need predictions in Y and N. So let’s convert 1 and 0 to Y and N.
+
+submission['Loan_Status'].replace(0, 'N',inplace=True) 
+submission['Loan_Status'].replace(1, 'Y',inplace=True)
+#Finally we will convert the submission to .csv format and make submission to check the accuracy on the leaderboard.
+
+pd.DataFrame(submission, columns=['Loan_ID','Loan_Status']).to_csv('logistic.csv')
+

@@ -1,0 +1,78 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jun  5 20:16:08 2020
+
+@author: yashc
+"""
+#Now after doing EDA we got to know the relation between variables and target variables.
+#From correlation matrix we got to know how each variable is realted to other,
+#Now, we will move to another step which is missing value imputation.
+x = train.isnull().sum()
+x[x>0]
+#There are missing values in Gender, Married, Dependents, Self_Employed,
+#Loan_Amount, Loan_Amount_Term, Credit_History.
+
+train['Gender'].fillna(train['Gender'].mode()[0], inplace = True)
+train['Married'].fillna(train['Married'].mode()[0], inplace = True)
+train['Dependents'].fillna(train['Dependents'].mode()[0], inplace = True)
+train['Self_Employed'].fillna(train['Self_Employed'].mode()[0], inplace = True)
+train['Credit_History'].fillna(train['Credit_History'].mode()[0], inplace = True)
+
+#we have imputed missing values in above variables using mode imputation.
+#as they were either categorical variables or just took values in group.
+#Like dependents took(0,1,2,3) values only so mean or median might not have worked.
+#Same with credit_History (0,1) values.
+
+#Now for mean imputation in loan amount term
+
+train['Loan_Amount_Term'].value_counts()
+#As we can see that there is a value 360 which is repeating the most.
+#so we will use mode imputation for this only as it takes discrete values.
+
+train['Loan_Amount_Term'].fillna(train['Loan_Amount_Term'].mode()[0], inplace = True)
+
+#Now for loan amount variable which is a numerical variable and takes continous
+#values so we will use either mean or median for imputation.
+
+train['LoanAmount'].fillna(train['LoanAmount'].median(), inplace = True)
+
+train.isnull().sum()
+#as we can see that there are no missing values in the train data.
+#Now we will do the same for the test data using the same approach.
+
+test.isnull().sum()
+test['Gender'].fillna(test['Gender'].mode()[0], inplace = True)
+test['Dependents'].fillna(test['Dependents'].mode()[0], inplace = True)
+test['Self_Employed'].fillna(test['Self_Employed'].mode()[0], inplace = True)
+test['Credit_History'].fillna(test['Credit_History'].mode()[0], inplace = True)
+test['Loan_Amount_Term'].fillna(test['Loan_Amount_Term'].mode()[0], inplace = True)
+test['LoanAmount'].fillna(test['LoanAmount'].median(), inplace = True)
+
+
+# As we can see that we have dealt with missing values in both train and test dataset.
+
+#Now, we will do outlier treatment as outliers have effect on mean and standard deviation.
+#it makes the distribution skewed which is not good for analysis.
+#Variables with outliers are : LoanAmount, ApplicantIncome, CoapplicantIncome.
+#One way to trat outliers is log transformation as it does not affect the smaller values
+#much but reduces the larger values. So we get distribution similar to normal distribution.
+
+#LoanAmount
+train['LoanAmount_log'] = np.log(train['LoanAmount'])
+train['LoanAmount_log'].hist(bins=20) #it shows distribution similar to normal distribution.
+
+test['LoanAmount_log'] = np.log(train['LoanAmount'])
+
+#ApplicantImcome
+
+train['ApplicantIncome_log'] = np.log(train['ApplicantIncome'])
+train['ApplicantIncome_log'].hist(bins=20) #it shows distribution similar to normal distribution.
+
+test['ApplicantIncome_log'] = np.log(test['ApplicantIncome'])
+
+#cannot do log transformation for coapplicant income as most of the values are 0
+#and log0 is undefined.
+
+
+
+

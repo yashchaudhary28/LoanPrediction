@@ -1,0 +1,44 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun  2 21:51:08 2020
+
+@author: yashc
+"""
+
+#Importing the required libraries
+
+import numpy as np        #For mathematical imputations
+import pandas as pd       #For data manipulation
+import seaborn as sns     #For data visualization
+import matplotlib.pyplot as plt     # For plotting graph
+%matplotlib inline
+import warnings           #To ignore warnings
+warnings.filterwarnings("ignore")
+
+
+#Reading the train and test data.
+
+train = pd.read_csv("train_ctrUa4K.csv")
+test = pd.read_csv("test_lAUu6dG.csv")
+
+train_original = train.copy()
+test_original = test.copy()
+
+#Check the features present in our data.
+
+train.columns  
+#Total we have 12 independent variables and 1 target variable in train data.
+test.columns
+#we have similar features in test data except for target variable which we will predict.
+
+
+#Check the datatypes of features present.
+
+train.dtypes
+test.dtypes
+# We have categorical and numerical variables and our target variable is categorical variable.
+
+
+#shape of the dataset
+train.shape
+test.shape

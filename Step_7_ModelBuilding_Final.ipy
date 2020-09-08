@@ -1,0 +1,247 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun  9 18:03:24 2020
+
+@author: yashc
+"""
+##We will build various model and compare their accuracy and choose the best one.
+
+from sklearn.model_selection import StratifiedKFold
+from sklearn import metrics
+#Prepare the data
+
+X = train.drop('Loan_Status', axis = 1)
+y = train.Loan_Status              #save the target variable in another dataset
+
+#Creating dummy variables 
+X = pd.get_dummies(X)
+train = pd.get_dummies(train)
+test = pd.get_dummies(test)
+
+##LOGISTIC REGRESSION
+
+i = 1
+kf = StratifiedKFold(n_splits = 5, random_state = 1, shuffle=True)
+for train_index, test_index in kf.split(X,y):
+    print('\n{} of kfold {}'.format(i, kf.n_splits))
+    xtr, xvl = X.loc[train_index], X.loc[test_index]
+    ytr, yvl = y[train_index], y[test_index]
+    
+    model = LogisticRegression(random_state = 1)
+    model.fit(xtr, ytr)
+    pred_test = model.predict(xvl)
+    score = accuracy_score(yvl, pred_test)
+    print('accuracy score', score)
+    i+=1
+    
+pred_test = model.predict(test)
+pred = model.predict_proba(xvl)[:,1]
+
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_original['Loan_ID']
+
+# replacing 0 and 1 with N and Y 
+submission['Loan_Status'].replace(0, 'N',inplace=True) 
+submission['Loan_Status'].replace(1, 'Y',inplace=True)
+
+#saving to a csv file.
+pd.DataFrame(submission, columns = ['Loan_ID', 'Loan_Status']).to_csv('Log2.csv')
+
+
+
+##DECISION TREE
+#It is a supervised learning mostly used in classification problems.  
+
+from sklearn import tree
+
+i=1
+kf = StratifiedKFold(n_splits = 5, random_state=1, shuffle = True)
+for train_index, test_index in kf.split(X,y):
+    print("\n{} of kfold {}".format(i, kf.n_splits))
+    xtr, xvl = X.loc[train_index], X.loc[test_index]
+    ytr, yvl = y[train_index], y[test_index]
+    
+    model = tree.DecisionTreeClassifier(random_state = 1)
+    model.fit(xtr, ytr)
+    pred_test = model.predict(xvl)
+    score = accuracy_score(yvl, pred_test)
+    print('accuracy_score', score)
+    i += 1
+    
+pred_test = model.predict(test)
+
+#save to a file for submission.
+
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_original['Loan_ID']
+
+# replacing 0 and 1 with N and Y 
+submission['Loan_Status'].replace(0, 'N',inplace=True) 
+submission['Loan_Status'].replace(1, 'Y',inplace=True)
+
+#save it
+pd.DataFrame(submission).to_csv('Decision_tree.csv')
+
+
+##RANDOM FOREST
+#it is an ensemble of decision tree.
+from sklearn.ensemble import RandomForestClassifier
+
+i=1
+kf = StratifiedKFold(n_splits = 5, random_state=1, shuffle = True)
+for train_index, test_index in kf.split(X, y):
+    print("\n{} of kfold {}".format(i, kf.n_splits))
+    xtr, xvl = X.loc[train_index], X.loc[test_index]
+    ytr, yvl = y[train_index], y[test_index]
+    
+    model = RandomForestClassifier(random_state = 1, max_depth = 10)
+    model.fit(xtr, ytr)
+    pred_test = model.predict(xvl)
+    score = accuracy_score(yvl, pred_test)
+    print('accuracy score', score)
+    i += 1
+    
+pred_test = model.predict(test)
+
+#save to a file for submission.
+
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_original['Loan_ID']
+
+# replacing 0 and 1 with N and Y 
+submission['Loan_Status'].replace(0, 'N',inplace=True) 
+submission['Loan_Status'].replace(1, 'Y',inplace=True)
+
+#save it
+pd.DataFrame(submission).to_csv('RandomForest.csv')
+
+#To improve the accuracy we will now tune the hyperparameters using gridsearch cv.
+from sklearn.model_selection import GridSearchCV
+
+#provide a range for max_depth (1,20,2) and for n_estimators(1,200,20).
+
+paramgrid = {'max_depth': list(range(1,20,2)), 'n_estimators': list(range(1,200,20))}
+grid_search = GridSearchCV(RandomForestClassifier(random_state=1), paramgrid)
+
+from sklearn.model_selection import train_test_split
+X_train, X_cv, y_train, y_cv = train_test_split(X, y, test_size=0.3, random_state = 1)
+
+#fit the gridsearch model
+grid_search.fit(X_train, y_train)
+
+#Estimating the optimized value
+grid_search.best_estimator_
+
+#optimized vallue is max_depth = 3, n_estimators = 41
+#now apply it on our data
+
+i=1
+kf = StratifiedKFold(n_splits = 5, random_state=1, shuffle = True)
+for train_index, test_index in kf.split(X, y):
+    print("\n{} of kfold {}".format(i, kf.n_splits))
+    xtr, xvl = X.loc[train_index], X.loc[test_index]
+    ytr, yvl = y[train_index], y[test_index]
+    
+    model = RandomForestClassifier(random_state = 1, max_depth = 3, n_estimators = 41)
+    model.fit(xtr, ytr)
+    pred_test = model.predict(xvl)
+    score = accuracy_score(yvl, pred_test)
+    print('accuracy score', score)
+    i += 1
+
+
+pred_test = model.predict(test)
+
+#saving it to a file for submission.
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_original['Loan_ID']
+
+# replacing 0 and 1 with N and Y 
+submission['Loan_Status'].replace(0, 'N',inplace=True) 
+submission['Loan_Status'].replace(1, 'Y',inplace=True)
+
+#save it
+pd.DataFrame(submission).to_csv('RandomForest_HyperParameter.csv')
+
+#find the most important features for this problem.
+importances = pd.Series(model.feature_importances_, index = X.columns)
+importances.plot(kind = 'barh', figsize = (12,8))
+
+# we can see that balance income, total income and emi are important features
+#so feature engineering helps. Credit history is the most important parameter.
+
+## XG BOOST
+from xgboost import XGBClassifier
+
+i = 1
+kf = StratifiedKFold(n_splits = 5, random_state=1, shuffle = True)
+for train_index, test_index in kf.split(X, y):
+    print("\n{} of fold {}".format(i, kf.n_splits))
+    xtr, xvl = X.loc[train_index], X.loc[test_index]
+    ytr, yvl = y[train_index], y[test_index]
+    
+    model = XGBClassifier(n_estimators = 50, max_depth = 4)
+    model.fit(xtr, ytr)
+    pred_test = model.predict(xvl)
+    score = accuracy_score(yvl, pred_test)
+    print('accuracy score', score)
+    i += 1
+    
+pred_test = model.predict(test)
+pred3 = model.predict_proba(test)[:,1]
+
+#saving it to a file for submission.
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_original['Loan_ID']
+
+# replacing 0 and 1 with N and Y 
+submission['Loan_Status'].replace(0, 'N',inplace=True) 
+submission['Loan_Status'].replace(1, 'Y',inplace=True)
+
+#save it
+pd.DataFrame(submission).to_csv('XGBoost.csv')
+
+
+#Applying hyperparameter using GridSearchCV.
+paramgrid = {'max_depth': list(range(1,40,2)), 'n_estimators': list(range(1,400,20))}
+
+grid_search = GridSearchCV(XGBClassifier(), paramgrid)
+
+X_train, X_cv, y_train, y_cv = train_test_split(X, y, test_size=0.3)
+grid_search.fit(X_train, y_train)
+
+#estimating the best estimator
+grid_search.best_estimator_
+
+i = 1
+kf = StratifiedKFold(n_splits = 5, random_state=1, shuffle = True)
+for train_index, test_index in kf.split(X, y):
+    print("\n{} of fold {}".format(i, kf.n_splits))
+    xtr, xvl = X.loc[train_index], X.loc[test_index]
+    ytr, yvl = y[train_index], y[test_index]
+    
+    model = XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
+              colsample_bynode=1, colsample_bytree=1, gamma=0,
+              learning_rate=0.1, max_delta_step=0, max_depth=5,
+              min_child_weight=1, missing=None, n_estimators=41, n_jobs=1,
+              nthread=None, objective='binary:logistic', random_state=1,
+              reg_alpha=0, reg_lambda=1, scale_pos_weight=1, seed=None,
+              silent=None, subsample=1, verbosity=1)
+    model.fit(xtr, ytr)
+    pred_test = model.predict(xvl)
+    score = accuracy_score(yvl, pred_test)
+    print('accuracy score', score)
+    i += 1
+    
+pred_test = model.predict(test)
+
+#saving it to a file for submission.
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_original['Loan_ID']
+
+# replacing 0 and 1 with N and Y 
+submission['Loan_Status'].replace(0, 'N',inplace=True) 
+submission['Loan_Status'].replace(1, 'Y',inplace=True)
+
+#save it
+pd.DataFrame(submission).to_csv('XGBoost_hyperparameter.csv')

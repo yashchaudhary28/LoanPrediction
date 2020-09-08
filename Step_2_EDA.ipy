@@ -1,0 +1,208 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun  2 22:03:46 2020
+
+@author: yashc
+"""
+##UNIVARIATE ANALYSIS
+
+train['Loan_Status'].value_counts()
+train['Loan_Status'].value_counts(normalize = True)
+train['Loan_Status'].value_counts().plot.bar(title = 'Loan_Status')
+# Conclusions made from bar plot, Loan was approved for 422 people out of 614.
+# or even can say 68.72% of the people got their loans approved.
+ 
+#Independent variables --> categorical
+#are Gender, Married, Self_employed, credit_history,Loan_status.
+plt.figure(1) 
+plt.subplot(221) 
+train['Gender'].value_counts(normalize = True).plot.bar(figsize=(20,10), title='Gender')
+plt.subplot(222)
+train['Married'].value_counts(normalize = True).plot.bar(figsize=(20,10),title = 'Married')
+plt.subplot(223)
+train['Self_Employed'].value_counts(normalize = True).plot.bar(figsize=(10,10), title = 'Self Employed')
+plt.subplot(224)
+train['Credit_History'].value_counts(normalize = True).plot.bar(figsize=(10,10), title = 'Credit History')
+
+# Conclusions drawn from above plots are:
+# -> 80% of the people are male.
+# -> Around 65% of the people are married.
+# -> Around 15% of the people are self-employed.
+# -> Around 85% of the people have credit history.
+
+# Independent Variables --> Ordinal 
+#are Dependents, Education, Property_Area
+plt.figure(1)
+plt.subplot(131)
+train['Dependents'].value_counts(normalize = True).plot.bar(figsize = (10,10),title = 'Dependents')
+plt.subplot(132)
+train['Education'].value_counts(normalize = True).plot.bar(figsize = (10,10), title = 'Education')
+plt.subplot(133)
+train['Property_Area'].value_counts(normalize = True).plot.bar(figsize = (10,10), title = 'Property_Area')
+
+# Conclusions drawn from above are:
+# -> Around 58% of the people have 0 dependents.
+# -> Around 78% of the people are graduates.
+# -> Around 37% of the people are from semiurban.
+
+#Independent Variable --> Numerical
+#are ApplicantIncome, CoapplicantIncome, LoanAmount, Loan_Amount_Term
+
+#Applicant Income
+plt.figure(1)
+plt.subplot(121)
+sns.distplot(train['ApplicantIncome'])
+plt.subplot(122)
+train['ApplicantIncome'].plot.box(figsize = (16,5))
+#The density graph shows that distribution is not normal but right skewed.
+#The box plot indicates that there are lot of outliers/extreme values. It can be
+#attributed to income disparity in the society.
+
+#Coapplicant Income
+plt.subplot(121)
+sns.distplot(train['CoapplicantIncome'])
+plt.subplot(122)
+train['CoapplicantIncome'].plot.box(figsize = (16,5))
+#The density graph shows that distribution is not normal but right skewed.
+#The box plot indicates presence of outliers/extreme values.
+
+#LoanAmount
+df = train.dropna()
+plt.subplot(122)
+sns.distplot(df['LoanAmount'])
+plt.subplot(122)
+df['LoanAmount'].plot.box(figsize=(16,5))
+#The density graph shows that distribution is fairly normal.
+#There are a lot of outliers shown in the box plot.
+
+#Loan_amount_term
+plt.subplot(122)
+sns.distplot(df['Loan_Amount_Term'])
+plt.subplot(122)
+df['Loan_Amount_Term'].plot.box(figsize = (16,5))
+#It shows skewed distribution with a outliers.
+
+
+##BIVARIATE ANALYSIS
+#Categorical Independent Variables vs Target Variable
+#Gender vs target variable
+Gender = pd.crosstab(train['Gender'], train['Loan_Status'])
+Gender.div(Gender.sum(1).astype(float), axis = 0).plot(kind='bar', stacked = True, figsize = (4,4))
+#x = Gender.sum(1).astype(float) --> Here we take sum of total females and male along column.
+#Gender.div(x, axis = 0)--> Here we convert in into two way frequnecy table an plot it.
+#It can be inferred that proportion for male and female is equal for both approved and unapproved loans.
+
+#other categorical variables vs target variable
+
+Married = pd.crosstab(train['Married'], train['Loan_Status'])
+Married.div(Married.sum(1).astype(float), axis = 0).plot(kind='bar', stacked = True, figsize=(4,4))
+#the proportion of approved loans for married people is higher than unmarried people.
+
+Self_Employed = pd.crosstab(train['Self_Employed'], train['Loan_Status'])
+Self_Employed.div(Self_Employed.sum(1).astype(float), axis=0).plot(kind='bar', stacked = True, figsize=(4,4))
+#The proportion for self-employed or not, is equal for both approved and unapproved loans.
+#The results are not that significant.
+
+Dependents = pd.crosstab(train['Dependents'], train['Loan_Status'])
+Dependents.div(Dependents.sum(1).astype(float), axis = 0).plot(kind='bar', stacked = True, figsize=(4,4))
+#Distribution of applicants with 1 and 3+ dependents is similar across both categories of Loan_Status.
+
+Education = pd.crosstab(train['Education'], train['Loan_Status'])
+Education.div(Education.sum(1).astype(float), axis=0).plot(kind='bar', stacked=True, figsize=(4,4))
+#It can be inferred that proportion for approval of loans is higher for graduate person.
+
+Property_Area = pd.crosstab(train['Property_Area'], train['Loan_Status'])
+Property_Area.div(Property_Area.sum(1).astype(float), axis=0).plot(kind='bar', stacked = True, figsize=(4,4))
+#It can be inferred that proportion for approval of loan is higher for person living in semiurban area than rural and urban areas.
+
+Credit_History = pd.crosstab(train['Credit_History'], train['Loan_Status'])
+Credit_History.div(Credit_History.sum(1).astype(float), axis=0).plot(kind='bar', stacked = True, figsize=(4,4))
+#It can be inferred that person with a credit history 1 has a high chance of getting their loan approved.
+
+
+#Numerical Independent Variable vs Target variable
+
+#we will try to figure out mean income of people for which loan is approved vs 
+#mean income of people for which loan is not approved.
+train.groupby('Loan_Status')['ApplicantIncome'].mean().plot.bar()
+#As we can see that mean for both approved or not approved is same, so we will further divide it into bins.
+bins = [0, 2500, 8000, 20000, 81000]
+group = ['Low', 'Average', 'High', 'Very High']
+train['Income_bin'] = pd.cut(train['ApplicantIncome'], bins, labels = group)
+
+Income = pd.crosstab(train['Income_bin'], train['Loan_Status'])
+Income.div(Income.sum(1).astype(float), axis = 0).plot(kind='bar', stacked = True, figsize = (4,4))
+#It can be inferred that applicant income does not affect the chances of loan approval.
+
+bins_1 = [0, 1000, 7000, 42000]
+groups_1 = ['Low', 'Average', 'High']
+train['CoIncome_bins'] = pd.cut(train['CoapplicantIncome'], bins_1, labels = groups_1)
+
+Coincome = pd.crosstab(train['CoIncome_bins'], train['Loan_Status'])
+Coincome.div(Coincome.sum(1).astype(float), axis = 0).plot(kind = 'bar', stacked = True, figsize = (4,4))
+#It can be inferred that lower the income of coapplicant, higher will be the chances for loan approval.
+#But this doesn't look right. This might be due to the fact that most of the values in coapplicant income are 0.
+#Hence, coapplicant income is not dependent on loan status.
+#We will make a new variable where we will combine the applicant and coapplicant income.
+
+train['Total_Income'] = train['ApplicantIncome'] + train['CoapplicantIncome']
+bins_2 = [0, 2500, 8000, 20000, 81000]
+group_2 = ['Low', 'Average', 'High', 'Very High']
+train['Total_Income_bin'] = pd.cut(train['Total_Income'], bins_2, labels = group_2)
+train['Total_Income_bin'].value_counts()
+
+Total_Income = pd.crosstab(train['Total_Income_bin'], train['Loan_Status'])
+Total_Income.div(Total_Income.sum(1).astype(float), axis=0).plot(kind='bar', stacked = True, figsize = (4,4))
+#It can be inferred that proportions of loan getting approved for people with low total income
+#is very less compared to average and high income groups. Less from very high income group.
+
+#Loan_Amount 
+bins_3 = [0, 100, 200, 700]
+group_3 = ['Low', 'Average', 'High']
+train['Loan_Amount_Bin'] = pd.cut(train['LoanAmount'], bins_3, labels = group_3)
+train['Loan_Amount_Bin'].value_counts()
+
+Loan_Amount_Bin = pd.crosstab(train['Loan_Amount_Bin'], train['Loan_Status'])
+Loan_Amount_Bin.div(Loan_Amount_Bin.sum(1).astype(float), axis=0).plot(kind='bar', stacked = True, figsize=(4,4))
+#It can be inferred that higher the amount of loan less chances are there for getting the loan approved.
+
+#Loan_Amount_Term
+bins_4 = [0, 180, 360, 480]
+group_4 = ['Low','Average','High']
+train['Loan_Term_Bin'] = pd.cut(train['Loan_Amount_Term'], bins_4, labels = group_4)
+train['Loan_Term_Bin'].value_counts()
+
+Loan_Term_Bin = pd.crosstab(train['Loan_Term_Bin'], train['Loan_Status'])
+Loan_Term_Bin.div(Loan_Term_Bin.sum(1).astype(float), axis = 0).plot(kind='bar', stacked = True, figsize=(4,4))
+#It can be inferred that higher the duration of loan more is the chance of getting loan disapproved.
+
+#lets drop the bins columns and prepare train data for corelation matrix
+train = train.drop(['Income_bin', 'CoIncome_bins', 'Total_Income_bin', 'Loan_Amount_Bin', 'Total_Income', 'Loan_Term_Bin'], axis = 1)
+train['Dependents'].replace('3+', 3, inplace = True)
+test['Dependents'].replace('3+', 3, inplace = True)
+
+train['Loan_Status'].replace('N', 0, inplace = True)
+train['Loan_Status'].replace('Y', 1, inplace = True)
+
+matrix = train.corr()
+f, ax = plt.subplots(figsize=(9,6))
+sns.heatmap(matrix, square = True, vmax = 0.8, cmap = 'BuPu')
+#From corelation heatmap it can be inferred that there is a strong positive relation
+#between credit history and loan status, loan amount and applicant income.
+#there is a mild correlation between loan amount and coapplicant income.
+
+#Lets check the relation between loan amount and applicant income.
+#Binning the applicant income
+bins = [0, 2500, 8000, 20000, 81000]
+group = ['Low', 'Average', 'High', 'Very High']
+train['Income_bin'] = pd.cut(train['ApplicantIncome'], bins, labels = group)
+#Binning the loan amount
+bins_3 = [0, 150, 700]
+group_3 = ['Low', 'High']
+train['Loan_Amount_Bin'] = pd.cut(train['LoanAmount'], bins_3, labels = group_3)
+train['Loan_Amount_Bin'].value_counts()
+
+Amount_Income = pd.crosstab(train['Income_bin'], train['Loan_Amount_Bin'])
+Amount_Income.div(Amount_Income.sum(1).astype(float), axis=0).plot(kind='bar', stacked = True, figsize = (4,4))
+#It can be inferred that if you have a very high income you will ask for a high loan amount.
+#if you have low income you will ask for a low loan amount.
